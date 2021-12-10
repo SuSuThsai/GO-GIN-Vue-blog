@@ -27,13 +27,19 @@ func GetCategoryAllArticles(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ := strconv.Atoi(c.Query("pageNum"))
 
-	if pageSize == 0 {
-		pageSize = -1
+	switch {
+	case pageSize >= 100:
+		pageSize = 100
+	case pageSize <= 0:
+		pageSize = 10
 	}
+
 	if pageNum == 0 {
-		pageNum = -1
+		pageNum = 1
 	}
+
 	data, code, total := model.GetCategoryAllArticles(cid, pageSize, pageNum)
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -45,7 +51,9 @@ func GetCategoryAllArticles(c *gin.Context) {
 // GetArticle 查询单个文章
 func GetArticle(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
+
 	data, code := model.GetArticle(id)
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    data,
@@ -57,20 +65,31 @@ func GetArticle(c *gin.Context) {
 func GetArticles(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ := strconv.Atoi(c.Query("pageNum"))
+	title := c.Query("title")
 
-	if pageSize == 0 {
-		pageSize = -1
+	switch {
+	case pageSize >= 100:
+		pageSize = 100
+	case pageSize <= 0:
+		pageSize = 10
 	}
+
 	if pageNum == 0 {
-		pageNum = -1
+		pageNum = 1
 	}
-	data, code, total := model.GetArticles(pageSize, pageNum)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    data,
-		"total":   total,
-		"message": errmsg.GetErrMsg(code),
-	})
+
+	if len(title) == 0 {
+		data, code, total := model.GetArticles(pageSize, pageNum)
+
+		c.JSON(http.StatusOK, gin.H{
+			"status":  code,
+			"data":    data,
+			"total":   total,
+			"message": errmsg.GetErrMsg(code),
+		})
+		return
+	}
+
 }
 
 // EditArticle 编辑文章

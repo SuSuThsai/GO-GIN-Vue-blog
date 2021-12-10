@@ -36,10 +36,11 @@ func CreatArticle(article *Article) (code int) {
 }
 
 // GetCategoryAllArticles 查询分类下的所有文章
-func GetCategoryAllArticles(cid int, pageSize int, pageNum int) ([]Article, int, int) {
+func GetCategoryAllArticles(cid int, pageSize int, pageNum int) ([]Article, int, int64) {
 	var CategoryAllArticles []Article
-	var total int
-	err = db.Preload("Category").Limit(pageSize).Offset((pageNum-1)*pageSize).Where("cid = ?", cid).Find(&CategoryAllArticles).Count(&total).Error
+	var total int64
+	err = db.Preload("Category").Limit(pageSize).Offset((pageNum-1)*pageSize).Where("cid = ?", cid).Find(&CategoryAllArticles).Error
+	db.Model(&CategoryAllArticles).Where("cid = ?", cid).Count(&total)
 	if err != nil {
 		return CategoryAllArticles, errmsg.ERROR_CATEGORY_NOT_EXIST, 0
 	}
@@ -57,12 +58,26 @@ func GetArticle(id int) (Article, int) {
 }
 
 // GetArticles 查询文章列表
-func GetArticles(pageSize int, pageNum int) ([]Article, int, int) {
+func GetArticles(pageSize int, pageNum int) ([]Article, int, int64) {
 	var articles []Article
-	var total int
-	err = db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articles).Count(&total).Error
+	var total int64
+	//err = db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articles).Count(&total).Error
+	err = db.Select("article.id, title, img, created_at, updated_at, `desc`, comment_count, read_count, category.name").Limit(pageSize).Offset((pageNum - 1) * pageSize).Order("Created_At DESC").Joins("Category").Find(&articles).Error
+	db.Model(&articles).Count(&total)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errmsg.ERROR, 0
+	}
+	return articles, errmsg.SUCCESS, total
+}
+
+// SearchArticle 搜索文章标题
+func SearchArticle(title string, pageSize int, pageNum int) ([]Article, int, int64) {
+	var articles []Article
+	var total int64
+	err = db.Select("article.id,title, img, created_at, updated_at, `desc`, comment_count, read_count, category.name").Limit(pageSize).Offset((pageNum-1)*pageSize).Order("Created_At DESC").Joins("Category").Where("title LIKE ?",
+		title+"%").Find(&articles).Count(&total).Error
+	if err != nil {
+		return articles, errmsg.ERROR, 0
 	}
 	return articles, errmsg.SUCCESS, total
 }
@@ -87,7 +102,7 @@ func EditArticle(id int, data *Article) int {
 	maps["desc"] = data.Desc
 	maps["content"] = data.Content
 	maps["img"] = data.Img
-	err = db.Model(&article).Where("id = ?", id).Update(maps).Error
+	err = db.Model(&article).Where("id = ?", id).Updates(&maps).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
