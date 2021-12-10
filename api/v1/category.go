@@ -26,21 +26,33 @@ func AddCategory(c *gin.Context) {
 	})
 }
 
-//查询分类下的所有文章
-
-//查询单个分类
+// GetCateInfo 查询单个分类
+func GetCateInfo(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	data, code := model.GetCateInfo(id)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"data":    data,
+		"message": errmsg.GetErrMsg(code),
+	})
+}
 
 // GetCategories 查询分类
 func GetCategories(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ := strconv.Atoi(c.Query("pageNum"))
 
-	if pageSize == 0 {
-		pageSize = -1
+	switch {
+	case pageSize >= 100:
+		pageSize = 100
+	case pageSize <= 0:
+		pageSize = 10
 	}
+
 	if pageNum == 0 {
-		pageNum = -1
+		pageNum = 1
 	}
+
 	data, total := model.GetCategories(pageSize, pageNum)
 	code := errmsg.SUCCESS
 	c.JSON(http.StatusOK, gin.H{
@@ -61,9 +73,9 @@ func EditCategory(c *gin.Context) {
 	if code == errmsg.SUCCESS {
 		model.EditCategory(id, &data)
 	}
-	//else if code == errmsg.ERROR_CATEGORYNAME_USED {
-	//	c.Abort()
-	//}
+	if code == errmsg.ERROR_CATEGORYNAME_USED {
+		c.Abort()
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"message": errmsg.GetErrMsg(code),
