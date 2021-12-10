@@ -28,6 +28,20 @@ func CheckUser(name string) (code int) {
 	return errmsg.SUCCESS
 }
 
+// CheckUpUser 更新查询
+func CheckUpUser(id int, name string) (code int) {
+	var user User
+	db.Select("id,username").Where("username = ?", name).First(&user)
+	if user.ID == uint(id) {
+		return errmsg.SUCCESS
+	} else if user.ID > 0 {
+		return errmsg.ERROR_USERNAME_USED //1001
+	} else if user.ID <= 0 {
+		return errmsg.ERROR_USER_NOT_EXIST //10003
+	}
+	return errmsg.SUCCESS
+}
+
 // CreatUser 创建用户
 func CreatUser(data *User) (code int) {
 	//data.Password=ScryptPW(data.Password)
@@ -38,13 +52,34 @@ func CreatUser(data *User) (code int) {
 	return errmsg.SUCCESS
 }
 
+// GetUser 查询用户
+func GetUser(id int) (User, int) {
+	var user User
+	err = db.Limit(1).Where("ID = ?", id).Find(&user).Error
+	if err != nil {
+		return user, errmsg.ERROR
+	}
+	return user, errmsg.SUCCESS
+}
+
 // GetUsers 查询用户列表
-func GetUsers(pageSize int, pageNum int) ([]User, int) {
+func GetUsers(username string, pageSize int, pageNum int) ([]User, int64) {
 	var users []User
-	var total int
-	err = db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Count(&total).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil, 0
+	var total int64
+	if username != "" {
+		db.Select("id,username,role,created_at").Where(
+			"username LIKE ?", username+"%",
+		).Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users)
+		db.Model(&users).Where(
+			"username LIKE ?", username+"%",
+		).Count(&total)
+		return users, total
+	}
+	err = db.Select("id,username,role,created_at").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Error
+	db.Model(&users).Count(&total)
+
+	if err != nil {
+		return users, 0
 	}
 	return users, total
 }
@@ -67,22 +102,45 @@ func EditUser(id int, data *User) int {
 	var maps = make(map[string]interface{})
 	maps["username"] = data.Username
 	maps["role"] = data.Role
-	err = db.Model(&user).Where("id = ?", id).Update(maps).Error
+	err = db.Model(&user).Where("id = ?", id).Updates(&maps).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS
 }
 
-// BeforeSave ScryptPW 密码加密 密码加密方法有：bcrypt，scrypt，加salt hash
-func (u *User) BeforeSave() {
-	u.Password = ScryptPW(u.Password)
+// ChangePassword 修改密码
+func ChangePassword(id int, data *User) int {
+	//var user User
+	//var maps = make(map[string]interface{})
+	//maps["password"] = data.Password
+
+	err = db.Select("password").Where("id = ?", id).Updates(&data).Error
+	if err != nil {
+		return errmsg.ERROR
+	}
+	return errmsg.SUCCESS
 }
+
+// BeforeCreate 密码加密 密码加密方法有：bcrypt，scrypt，加salt hash
+func (u *User) BeforeCreate(_ *gorm.DB) (err error) {
+	u.Password = ScryptPW(u.Password)
+	u.Role = 2
+	return nil
+}
+
+func (u *User) BeforeUpdate(_ *gorm.DB) (err error) {
+	u.Password = ScryptPW(u.Password)
+	return nil
+}
+
 func ScryptPW(password string) string {
 	const KeyLen = 10
 	salt := make([]byte, 8)
 	salt = []byte{255, 22, 18, 33, 99, 66, 25, 11}
 	HashPW, err := scrypt.Key([]byte(password), salt, 16384, 8, 1, KeyLen)
+	//HashPW, err :=bcrypt.GenerateFromPassword([]byte(password),KeyLen)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +148,7 @@ func ScryptPW(password string) string {
 	return fpw
 }
 
-// ValidateLogin 登陆验证
+// ValidateLogin 后台登陆验证
 func ValidateLogin(username string, password string) (User, int) {
 	var user User
 	//var PasswordErr error
@@ -111,5 +169,26 @@ func ValidateLogin(username string, password string) (User, int) {
 	if user.Role != 1 {
 		return user, errmsg.ERROR_USER_NOT_RIGHT
 	}
+	return user, errmsg.SUCCESS
+}
+
+// CheckLoginFront 前台登录
+func CheckLoginFront(username string, password string) (User, int) {
+	var user User
+	//var PasswordErr error
+
+	db.Where("username = ?", username).First(&user)
+
+	//PasswordErr=bcrypt.CompareHashAndPassword([]byte(user.Password),[]byte(password))
+
+	if user.ID == 0 {
+		return user, errmsg.ERROR_USER_NOT_EXIST
+	}
+	if ScryptPW(password) != user.Password {
+		return user, errmsg.ERROR_PASSWORD_WRONG
+	}
+	//if PasswordErr != nil {
+	//	return user,errmsg.ERROR_PASSWORD_WRONG
+	//}
 	return user, errmsg.SUCCESS
 }
