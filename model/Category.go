@@ -23,7 +23,6 @@ func CheckCategory(name string) (code int) {
 
 // CreatCategory 创建分类
 func CreatCategory(category *Category) (code int) {
-	//data.Password=ScryptPW(data.Password)
 	err = db.Create(category).Error
 	if err != nil {
 		return errmsg.ERROR //500
@@ -31,18 +30,26 @@ func CreatCategory(category *Category) (code int) {
 	return errmsg.SUCCESS
 }
 
+// GetCateInfo 查询单个分类信息
+func GetCateInfo(id int) (Category, int) {
+	var category Category
+	err = db.Where("id = ?", id).First(&category).Error
+	if err != nil {
+		return category, errmsg.ERROR
+	}
+	return category, errmsg.SUCCESS
+}
+
 // GetCategories 查询分类列表
-func GetCategories(pageSize int, pageNum int) ([]Category, int) {
+func GetCategories(pageSize int, pageNum int) ([]Category, int64) {
 	var categories []Category
-	var total int
+	var total int64
 	err = db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&categories).Count(&total).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, 0
 	}
 	return categories, total
 }
-
-//查询分类下的所有文章
 
 // DeleteCategory 删除分类
 func DeleteCategory(id int) int {
@@ -61,7 +68,7 @@ func EditCategory(id int, data *Category) int {
 	var category Category
 	var maps = make(map[string]interface{})
 	maps["name"] = data.Name
-	err = db.Model(&category).Where("id = ?", id).Update(maps).Error
+	err = db.Model(&category).Where("id = ?", id).Updates(maps).Error
 	if err != nil {
 		return errmsg.ERROR
 	}
