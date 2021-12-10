@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"GO-GIN-Vue-blog/model"
 	"GO-GIN-Vue-blog/utils"
 	"GO-GIN-Vue-blog/utils/errmsg"
 	"errors"
@@ -9,17 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
-	"time"
 )
 
-//type JWT struct {
-//	JwtKey []byte
-//}
-//func NewJWT() *JWT {
-//	return &JWT{
-//		[]byte(utils.JwtKey),
-//	}
-//}
+type JWT struct {
+	JwtKey []byte
+}
+
+func NewJWT() *JWT {
+	return &JWT{
+		[]byte(utils.JwtKey),
+	}
+}
 
 var JwtKey = []byte(utils.JwtKey)
 
@@ -37,21 +36,21 @@ var (
 )
 
 // CreatToken 生成TOKEN(J*JWT)
-func CreatToken(user model.User) (string, error) {
+func (j *JWT) CreatToken(claims Claims) (string, error) {
 	//var J *JWT
-	expireTime := time.Now().Add(7 * 24 * time.Hour)
-	claims := &Claims{
-		UserID: user.ID,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
-			IssuedAt:  time.Now().Unix(),
-			Issuer:    "Yamada",
-			Subject:   "user token",
-		},
-	}
+	//expireTime := time.Now().Add(7 * 24 * time.Hour)
+	//claims := &Claims{
+	//	UserID: user.ID,
+	//	StandardClaims: jwt.StandardClaims{
+	//		ExpiresAt: expireTime.Unix(),
+	//		IssuedAt:  time.Now().Unix(),
+	//		Issuer:    "Yamada",
+	//		Subject:   "user token",
+	//	},
+	//}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(JwtKey)
+	tokenString, err := token.SignedString(j.JwtKey)
 	if err != nil {
 		return "", err
 	}
@@ -60,7 +59,7 @@ func CreatToken(user model.User) (string, error) {
 }
 
 // ParserToken 验证TOKEN
-func ParserToken(tokenString string) (*jwt.Token, *Claims, error) {
+func (j *JWT) ParserToken(tokenString string) (*jwt.Token, *Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (i interface{}, err error) {
 		return JwtKey, nil
@@ -114,6 +113,7 @@ func JwtToken() gin.HandlerFunc {
 			context.Abort()
 			return
 		}
+
 		if len(checkToken) != 2 || checkToken[0] != "Bearer" {
 			context.JSON(http.StatusUnauthorized, gin.H{
 				"status":  code,
@@ -123,9 +123,9 @@ func JwtToken() gin.HandlerFunc {
 			return
 		}
 
-		//NewJWT()
+		j := NewJWT()
 		//解析Token
-		_, claims, err := ParserToken(checkToken[1])
+		_, claims, err := j.ParserToken(checkToken[1])
 		if err != nil {
 			if err == TokenExpired {
 				context.JSON(http.StatusUnauthorized, gin.H{
