@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	AppNode  string
+	AppMode  string
 	HttpPort string
 	JwtKey   string
 
@@ -34,7 +34,7 @@ func init() {
 }
 
 func LoadServer(file *ini.File) {
-	AppNode = file.Section("server").Key("AppNode").MustString("debug")
+	AppMode = file.Section("server").Key("AppMode").MustString("debug")
 	HttpPort = file.Section("server").Key("HttpPort").MustString(":3000")
 	JwtKey = file.Section("server").Key("JwtKey").MustString("255149331")
 }
