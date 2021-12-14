@@ -31,6 +31,21 @@
         </v-list-item-icon>
         <v-list-item-content class="grey--text">{{profileInfo.wechat}}</v-list-item-content>
       </v-list-item>
+      
+      <v-list-item>
+        <v-list-item-icon class="ma-3">
+          <v-icon color="blue darken-2">{{'mdi-twitter'}}</v-icon>
+        </v-list-item-icon>
+        <v-list-item-content class="grey--text">{{profileInfo.wechat}}</v-list-item-content>
+      </v-list-item>
+
+      <!-- Line -->
+      <v-list-item>
+        <v-list-item-icon class="ma-3">
+          <v-icon color="green darken-2">{{'mdi-message'}}</v-icon>
+        </v-list-item-icon>
+        <v-list-item-content class="grey--text">{{profileInfo.wechat}}</v-list-item-content>
+      </v-list-item>
 
       <v-list-item>
         <v-list-item-icon class="ma-3">
