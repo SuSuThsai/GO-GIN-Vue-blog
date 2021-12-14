@@ -20,11 +20,12 @@ func AddUser(c *gin.Context) {
 	var data model.User
 	var msg string
 	var code int
+	var validCode int
 	_ = c.ShouldBind(&data)
-	msg, code = validate.Validate(&data)
-	if code != errmsg.SUCCESS {
+	msg, validCode = validate.Validate(&data)
+	if validCode != errmsg.SUCCESS {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"status":  code,
+			"status":  validCode,
 			"message": msg,
 		})
 		c.Abort()
@@ -117,6 +118,7 @@ func DeleteUser(c *gin.Context) {
 func ChangeUserPassword(c *gin.Context) {
 	var data model.User
 	id, _ := strconv.Atoi(c.Param("id"))
+	_ = c.ShouldBind(&data)
 
 	code := model.ChangePassword(id, &data)
 

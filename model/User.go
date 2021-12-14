@@ -22,8 +22,6 @@ func CheckUser(name string) (code int) {
 	db.Select("id").Where("username = ?", name).First(&users)
 	if users.ID > 0 {
 		return errmsg.ERROR_USERNAME_USED //1001
-	} else if users.ID == 0 {
-		return errmsg.ERROR_USER_NOT_EXIST //10003
 	}
 	return errmsg.SUCCESS
 }
@@ -44,8 +42,8 @@ func CheckUpUser(id int, name string) (code int) {
 
 // CreatUser 创建用户
 func CreatUser(data *User) (code int) {
-	//data.Password=ScryptPW(data.Password)
-	err = db.Create(data).Error
+	data.Password = ScryptPW(data.Password)
+	err = db.Create(&data).Error
 	if err != nil {
 		return errmsg.ERROR //500
 	}
