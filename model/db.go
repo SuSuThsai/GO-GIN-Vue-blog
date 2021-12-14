@@ -40,7 +40,7 @@ func InitDb() {
 	}
 
 	// 自动迁移
-	_ = db.AutoMigrate(&User{}, &Category{}, &Article{})
+	_ = db.AutoMigrate(&User{}, &Category{}, &Article{}, &Profile{}, &Comment{})
 	sqlDB, _ := db.DB()
 	if err != nil {
 		fmt.Println("获取数据库链接失败：", err)
