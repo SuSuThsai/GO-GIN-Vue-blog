@@ -8,11 +8,13 @@ import (
 type Article struct {
 	Category Category `gorm:"foreignkey:Cid"`
 	gorm.Model
-	Title   string `gorm:"type:varchar(100);not null"json:"title"`
-	Cid     int    `gorm:"type:int;not null"json:"cid"`
-	Desc    string `gorm:"type:varchar(200)"json:"desc"`
-	Content string `gorm:"type:longtext"json:"content"`
-	Img     string `gorm:"type:varchar(100)"json:"img"`
+	Title        string `gorm:"type:varchar(100);not null"json:"title"`
+	Cid          int    `gorm:"type:int;not null"json:"cid"`
+	Desc         string `gorm:"type:varchar(200)"json:"desc"`
+	Content      string `gorm:"type:longtext"json:"content"`
+	Img          string `gorm:"type:varchar(100)"json:"img"`
+	CommentCount int    `gorm:"type:int;not null;default:0"json:"comment_count"`
+	ReadCount    int    `gorm:"type:int;not null;default:0"json:"read_count"`
 }
 
 //// CheckArticle 查询文章是否存在
@@ -62,9 +64,9 @@ func GetArticles(pageSize int, pageNum int) ([]Article, int, int64) {
 	var articles []Article
 	var total int64
 	//err = db.Preload("Category").Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&articles).Count(&total).Error
-	err = db.Select("article.id, title, img, created_at, updated_at, `desc`, comment_count, read_count, category.name").Limit(pageSize).Offset((pageNum - 1) * pageSize).Order("Created_At DESC").Joins("Category").Find(&articles).Error
+	err = db.Select("article.id, title, img, article.created_at, article.updated_at, `desc`, comment_count, read_count, category.name").Limit(pageSize).Offset((pageNum - 1) * pageSize).Order("Created_At DESC").Joins("Category").Find(&articles).Error
 	db.Model(&articles).Count(&total)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil {
 		return nil, errmsg.ERROR, 0
 	}
 	return articles, errmsg.SUCCESS, total
@@ -74,7 +76,7 @@ func GetArticles(pageSize int, pageNum int) ([]Article, int, int64) {
 func SearchArticle(title string, pageSize int, pageNum int) ([]Article, int, int64) {
 	var articles []Article
 	var total int64
-	err = db.Select("article.id,title, img, created_at, updated_at, `desc`, comment_count, read_count, category.name").Limit(pageSize).Offset((pageNum-1)*pageSize).Order("Created_At DESC").Joins("Category").Where("title LIKE ?",
+	err = db.Select("article.id,title, img, article.created_at, article.updated_at, `desc`, comment_count, read_count, category.name").Limit(pageSize).Offset((pageNum-1)*pageSize).Order("Created_At DESC").Joins("Category").Where("title LIKE ?",
 		title+"%").Find(&articles).Count(&total).Error
 	if err != nil {
 		return articles, errmsg.ERROR, 0

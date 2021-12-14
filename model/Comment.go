@@ -91,7 +91,7 @@ func CheckComment(id int, data *Comment) int {
 	var maps = make(map[string]interface{})
 	maps["status"] = data.Status
 
-	err = db.Model(&comment).Where("id = ?", id).Update(maps).First(&ans).Error
+	err = db.Model(&comment).Where("id = ?", id).Updates(maps).First(&ans).Error
 	db.Model(&article).Where("id = ?", ans.ArticleId).UpdateColumn("comment_count", gorm.Expr("comment_count+?", 1))
 	if err != nil {
 		return errmsg.ERROR
@@ -107,7 +107,7 @@ func UncheckComment(id int, data *Comment) int {
 	var maps = make(map[string]interface{})
 	maps["status"] = data.Status
 
-	err = db.Model(&comment).Where("id = ?", id).Update(maps).First(&ans).Error
+	err = db.Model(&comment).Where("id = ?", id).Updates(maps).First(&ans).Error
 	db.Model(&article).Where("id = ?", ans.ArticleId).UpdateColumn("comment_count", gorm.Expr("comment_count - ?", 1))
 	if err != nil {
 		return errmsg.ERROR
