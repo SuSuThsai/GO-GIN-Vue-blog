@@ -40,7 +40,7 @@ export default {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
           {
-            min: 4,
+            min: 2,
             max: 12,
             message: '用户名必须在4到12个字符之间',
             trigger: 'blur',
