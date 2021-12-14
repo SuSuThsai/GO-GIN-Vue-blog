@@ -1,8 +1,13 @@
 package model
 
-import "GO-GIN-Vue-blog/utils/errmsg"
+import (
+	"GO-GIN-Vue-blog/utils/errmsg"
+	"errors"
+	"github.com/jinzhu/gorm"
+)
 
 type Profile struct {
+	User      User   `gorm:"foreignkey:ID"`
 	ID        int    `gorm:"primaryKey"json:"id"`
 	Name      string `gorm:"type:varchar(20)"json:"name"`
 	Desc      string `gorm:"type:varchar(200)"json:"desc"`
@@ -21,8 +26,9 @@ type Profile struct {
 // GetProfile 获取个人信息设置
 func GetProfile(id int) (Profile, int) {
 	var profile Profile
-	err = db.Where("ID = ?", id).First(&profile).Error
-	if err != nil {
+	err = db.Preload("User").Where("ID = ?", id).First(&profile).Error
+	//err = db.Where("ID = ?", id).Limit(1).Find(&profile).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return profile, errmsg.ERROR
 	}
 	return profile, errmsg.SUCCESS
@@ -32,7 +38,7 @@ func GetProfile(id int) (Profile, int) {
 func UpdateProfile(id int, data *Profile) int {
 	var profile Profile
 	err = db.Model(&profile).Where("ID = ?", id).Updates(&data).Error
-	if err != nil {
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return errmsg.ERROR
 	}
 	return errmsg.SUCCESS

@@ -10,10 +10,12 @@ import (
 
 // GetProfile 获取个人信息设置
 func GetProfile(c *gin.Context) {
+	//var profile model.Profile
+	//var code int
 	id, _ := strconv.Atoi(c.Param("id"))
+	//_=c.ShouldBind(&profile)
 
 	profile, code := model.GetProfile(id)
-
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    profile,
