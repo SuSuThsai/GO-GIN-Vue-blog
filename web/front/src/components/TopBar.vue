@@ -4,7 +4,7 @@
       <v-app-bar-nav-icon dark class="hidden-md-and-up" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>
         <v-app-bar-nav-icon class="mx-15 hidden-md-and-down">
-          <v-avatar size="40" color="grey">
+          <v-avatar size="40" >
             <img src="../assets/logo.png" alt />
           </v-avatar>
         </v-app-bar-nav-icon>

@@ -21,6 +21,14 @@
         <a-input style="width: 300px" v-model="profileInfo.wechat"></a-input>
       </a-form-model-item>
 
+      <a-form-model-item label="Twitter">
+        <a-input style="width: 300px" v-model="profileInfo.Twitter"></a-input>
+      </a-form-model-item>
+
+      <a-form-model-item label="Line">
+        <a-input style="width: 300px" v-model="profileInfo.Line"></a-input>
+      </a-form-model-item>
+
       <a-form-model-item label="微博">
         <a-input style="width: 300px" v-model="profileInfo.weibo"></a-input>
       </a-form-model-item>
@@ -83,10 +91,12 @@ export default {
     return {
       profileInfo: {
         id: 1,
-        name: '',
-        desc: '',
+        name: '柊奈奈',
+        desc: '是娜娜丫',
         qq_chat: '',
         wechat: '',
+        Twitter:'',
+        Line:'',
         weibo: '',
         bili: '',
         email: '',
